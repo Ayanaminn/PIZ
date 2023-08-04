@@ -8,11 +8,14 @@ PLS is an open-source, programmable interface for sensory-motor biotests with ze
 
 
 
-![flow](https://github.com/Ayanaminn/PIZ/assets/49441654/2c841079-75a0-4bc8-b342-ac4f044e6e66)
-
 **Please cite our manuscript:**
 
 Coming Soon
+
+&nbsp;
+
+
+PIZ is a prototype program that first wrote in C# then remake in Python. An advanced version with improved features is now available under [NeuroBox](https://github.com/Ayanaminn/NeuroBox) project.
 
 
 Installation:
