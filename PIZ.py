@@ -24,13 +24,14 @@ class MainWindow(QtWidgets.QMainWindow, PIZ_GUI.Ui_MainWindow):
 
         self.state_a.addItems(['ON', 'OFF'])
         self.state_b.addItems(['ON', 'OFF'])
+        self.state_c.addItems(['ON', 'OFF'])
 
         self.rule_index = 0 # first rule index is 1
         self.rule_list = []
 
         self.add_rule_button.clicked.connect(self.add_rule)
 
-        heads = ['Step','Channel A','Time(s)', 'Channel B', 'Time(s)']
+        heads = ['Step','Channel A','Time(s)', 'Channel B', 'Time(s)','Channel C', 'Time(s)']
         self.treeWidget.setHeaderLabels(heads)
         self.treeWidget.setAlternatingRowColors(True)
 
@@ -39,6 +40,7 @@ class MainWindow(QtWidgets.QMainWindow, PIZ_GUI.Ui_MainWindow):
 
         self.light_A.setStyleSheet('background-color:white')
         self.light_B.setStyleSheet('background-color:white')
+        self.light_C.setStyleSheet('background-color:white')
         self.light_loop.setStyleSheet('background-color:white')
 
         self.light_thread = LightThread()
@@ -50,6 +52,11 @@ class MainWindow(QtWidgets.QMainWindow, PIZ_GUI.Ui_MainWindow):
         self.light_thread_b.signals.b_on.connect(self.light_b_on)
         self.light_thread_b.signals.b_off.connect(self.light_b_off)
         self.light_thread_b.signals.b_finish.connect(self.loop_b_finish)
+
+        self.light_thread_c = LightThreadC()
+        self.light_thread_c.signals.c_on.connect(self.light_c_on)
+        self.light_thread_c.signals.c_off.connect(self.light_c_off)
+        self.light_thread_c.signals.c_finish.connect(self.loop_c_finish)
 
         self.start_button.clicked.connect(self.start)
 
@@ -113,6 +120,7 @@ class MainWindow(QtWidgets.QMainWindow, PIZ_GUI.Ui_MainWindow):
                 # turn off devices
                 self.active_device.write(b'0')
                 self.active_device.write(b'3')
+                self.active_device.write(b'5')
                 print(f'device is open : {self.active_device.isOpen()}')
                 self.port_comboBox.setEnabled(False)
                 self.port_connect_button.setEnabled(False)
@@ -185,8 +193,10 @@ class MainWindow(QtWidgets.QMainWindow, PIZ_GUI.Ui_MainWindow):
         time_a = self.time_a.value()
         state_b = self.state_b.currentText()
         time_b = self.time_b.value()
+        state_c = self.state_c.currentText()
+        time_c = self.time_c.value()
 
-        new_rule = Rules(self.rule_index, state_a,time_a,state_b,time_b)
+        new_rule = Rules(self.rule_index, state_a,time_a,state_b,time_b,state_c,time_c)
 
         current_rule_text = []
         for attr, value in new_rule.__dict__.items():
@@ -204,14 +214,19 @@ class MainWindow(QtWidgets.QMainWindow, PIZ_GUI.Ui_MainWindow):
         step_state_a = []
         step_time_b = []
         step_state_b = []
+        step_time_c = []
+        step_state_c = []
 
         for i in self.rule_list:
             step_time_a.append(i.time_a * 1000) # seconds to milliseconds
             step_time_b.append(i.time_b * 1000)  # seconds to milliseconds
+            step_time_c.append(i.time_c * 1000)  # seconds to milliseconds
         print(f'step time is {step_time_a}')
         print(f'step time b is {step_time_b}')
+        print(f'step time c is {step_time_c}')
         self.light_thread.step_time = step_time_a
         self.light_thread_b.step_time = step_time_b
+        self.light_thread_c.step_time = step_time_c
 
         for i in self.rule_list:
             if i.state_a == 'ON':
@@ -229,19 +244,31 @@ class MainWindow(QtWidgets.QMainWindow, PIZ_GUI.Ui_MainWindow):
         print(f'condition list b is {step_state_b}')
         self.light_thread_b.step_state = step_state_b
 
+        for i in self.rule_list:
+            if i.state_c == 'ON':
+                step_state_c.append(1)
+            elif i.state_c == 'OFF':
+                step_state_c.append(0)
+        print(f'condition list c is {step_state_c}')
+        self.light_thread_c.step_state = step_state_c
+
         self.light_thread.total_steps = self.rule_list[-1].rule_index
         self.light_thread_b.total_steps = self.rule_list[-1].rule_index
+        self.light_thread_c.total_steps = self.rule_list[-1].rule_index
         print(f'total steps passed to thread is {self.light_thread.total_steps}')
         print(f'total steps passed to thread b is {self.light_thread_b.total_steps}')
+        print(f'total steps passed to thread c is {self.light_thread_c.total_steps}')
 
         self.light_thread.cycles = self.total_cycle.value()
         self.light_thread_b.cycles = self.total_cycle.value()
+        self.light_thread_c.cycles = self.total_cycle.value()
 
     def start(self):
 
         self.light_loop.setStyleSheet('background-color:green')
         self.light_thread.run()
         self.light_thread_b.run()
+        self.light_thread_c.run()
 
     def reset(self):
         self.rule_list.clear()
@@ -273,17 +300,31 @@ class MainWindow(QtWidgets.QMainWindow, PIZ_GUI.Ui_MainWindow):
         self.light_thread_b.stop()
         print('loop b finish')
 
+    def light_c_on(self):
+        self.light_C.setStyleSheet('background-color:yellow')
+        self.active_device.write(b'4')
+
+    def light_c_off(self):
+        self.light_C.setStyleSheet('background-color:black')
+        self.active_device.write(b'5')
+
+    def loop_c_finish(self):
+        self.light_thread_c.stop()
+        print('loop c finish')
+
 
 class Rules(object):
     _registry = []
 
-    def __init__(self, rule_index, state_a, time_a, state_b, time_b):
+    def __init__(self, rule_index, state_a, time_a, state_b, time_b, state_c, time_c):
 
         self.rule_index = rule_index
         self.state_a = state_a
         self.time_a = time_a
         self.state_b = state_b
         self.time_b = time_b
+        self.state_c = state_c
+        self.time_c = time_c
         self._registry.append(self)
 
 
@@ -294,6 +335,9 @@ class Signals(QObject):
     b_on = pyqtSignal(str)
     b_off = pyqtSignal(str)
     b_finish = pyqtSignal(str)
+    c_on = pyqtSignal(str)
+    c_off = pyqtSignal(str)
+    c_finish = pyqtSignal(str)
 
 
 class LightThread(QThread):
@@ -455,6 +499,75 @@ class LightThreadB(QThread):
             self.update_steps()
         print(f' loop counter b is {self.loop_counter}')
 
+
+class LightThreadC(QThread):
+
+    def __init__(self):
+        QThread.__init__(self)
+        self.signals = Signals()
+        self.mutex = QMutex()
+        self.stopped = False
+
+        self.step_timer = QTimer() # on/off time for each rule step
+        self.current_step = 0 # init
+        self.loop_counter = 0  # init
+        self.total_steps = 0 # init total
+        self.step_time = []
+        self.step_state = [] # 0:off, 1: on
+        self.cycles = 0
+
+        self.step_timer.setSingleShot(True)
+        self.step_timer.timeout.connect(self.update_loop)
+
+    def run(self):
+        with QMutexLocker(self.mutex):
+            self.stopped = False
+        try:
+            print('thread c run')
+            self.update_loop()
+
+        except Exception as e:
+            print(e)
+
+    def stop(self):
+        with QMutexLocker(self.mutex):
+            self.stopped = True
+
+    def update_steps(self):
+        # within this loop
+        if self.current_step < self.total_steps:
+            print(f'for step {self.current_step}')
+            # get on/off time for current rule from rule list
+            self.step_timer.setInterval(self.step_time[self.current_step])
+            print(f'step time c {self.step_time[self.current_step]}')
+            print(f'step state c {self.step_state[self.current_step]}')
+            # if state for this step is on
+            if self.step_state[self.current_step] == 1:
+                self.signals.c_on.emit('1')
+                print(' on emit')
+                self.current_step +=1
+            # if state for this step is off
+            else:
+                print(' off emit')
+                self.signals.c_off.emit('1')
+                self.current_step += 1
+            self.step_timer.start()
+        # go back to step 1 and re-execute all steps again
+        else:
+            self.current_step = 0
+            self.loop_counter += 1
+            self.update_loop()
+
+    def update_loop(self):
+        # if all cycle finsished
+        print('update loop c')
+        if self.loop_counter >= self.cycles:  # 2 loop make 1 full cycle
+            self.signals.c_finish.emit('1')
+            self.current_step = 0  # reset
+        # execute steps within this loop
+        else:
+            self.update_steps()
+        print(f' loop counter c is {self.loop_counter}')
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ Interface wtih Python through COM port communication
 Read input
 */
 
-int userCommand = 5;
+int userCommand = 6;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -11,9 +11,11 @@ void setup() {
   // initialize digital pin 9 as an output.
   pinMode(8, OUTPUT);
   pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
   // initial state
   digitalWrite (8,LOW);
   digitalWrite (9,LOW);
+  digitalWrite (10,LOW);
 }
 
 // the loop function runs over and over again forever
@@ -37,6 +39,14 @@ void loop() {
     
     if (userCommand == '3'){
         digitalWrite(9, LOW);
+
+    }
+    if (userCommand == '4'){
+        digitalWrite(10, HIGH);
+
+    }
+    if (userCommand == '5'){
+        digitalWrite(10, LOW);
 
     }
   }
