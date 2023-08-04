@@ -24,17 +24,16 @@ Installation:
 
 ### Software
 
-1. Download the latest release from [Releases](https://github.com/Ayanaminn/PLS/releases).
+1. Download the latest release from [Releases](https://github.com/Ayanaminn/PIZ/releases).
 
-2. Unzip file and open "PIZ" folder.
+2. Unzip file and double click to run "PIZ.exe".
 
-3. Double click to run "PIZ.exe".
 
 ### Hardware
 
 1. Download the latest release from [Releases](https://github.com/Ayanaminn/PIZ/releases).
 
-2. Unzip file and open "PMR control panel Arduino script" folder.
+2. Unzip file and open "PIZ_Arduino" folder.
 
 3. Using [Arduino IDE](https://www.arduino.cc/en/software) to open the "PIZ_Arduino.ino" and upload it to board.
 
