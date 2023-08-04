@@ -38,7 +38,7 @@ Installation:
 
 3. Using [Arduino IDE](https://www.arduino.cc/en/software) to open the "PIZ_Arduino.ino" and upload it to board.
 
-4. Wire LED circuit to Arduino pin 8, 9 (default pin), if user prefer to use other pins, change pin number in the script accordingly and re-upload.
+4. Wire LED circuit to Arduino pin 8, 9 10 (default pin), if user prefer to use other pins, change pin number in the script accordingly and re-upload.
 
 
 Getting Started:
